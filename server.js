@@ -43,7 +43,7 @@ db.query(`
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "https://voting-system-frontend-blue.vercel.app/", 
+    origin: "https://voting-system-frontend-blue.vercel.app", 
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
