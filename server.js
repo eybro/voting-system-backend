@@ -38,20 +38,20 @@ db.query(`
   )
 `);
 
-// Create HTTP server and socket.io
+
 
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000", // Specify the frontend origin
+    origin: "https://voting-system-frontend-blue.vercel.app/", 
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
   },
-  transports: ["websocket", "polling"], // Ensure both transports are enabled
+  transports: ["websocket", "polling"], 
 });
 
-// Emit vote progress updates
+
 const emitVoteProgress = async () => {
   const [totalApproved] = await dbPromise.query("SELECT COUNT(*) as total FROM approved_emails");
   const [totalVotes] = await dbPromise.query("SELECT COUNT(DISTINCT email) as total FROM votes");
@@ -63,7 +63,7 @@ const emitVoteProgress = async () => {
 };
 
 
-// Validate email
+
 app.post("/validate", (req, res) => {
   const { email } = req.body;
   db.query("SELECT email FROM approved_emails WHERE email = ?", [email], (err, results) => {
@@ -71,7 +71,7 @@ app.post("/validate", (req, res) => {
   });
 });
 
-// Vote route
+
 app.post("/vote", async (req, res) => {
   const { email, candidate } = req.body;
   try {
@@ -82,7 +82,7 @@ app.post("/vote", async (req, res) => {
     }
 
     await dbPromise.query("INSERT INTO votes (email, candidate) VALUES (?, ?)", [email, candidate]);
-    emitVoteProgress(); // Notify all clients about vote progress
+    emitVoteProgress(); 
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -94,12 +94,10 @@ app.post("/admin/reset-votes", async (req, res) => {
     const { password } = req.body;
   
     try {
-      // Verify the admin password using the helper function
       await verifyAdminPassword(password);
   
-      // Proceed with the rest of the logic
       await dbPromise.query("DELETE FROM votes");
-      emitVoteProgress(); // Notify all clients about vote reset
+      emitVoteProgress(); 
       res.json({ success: true });
     } catch (error) {
       res.status(403).json({ message: error.message });
@@ -107,14 +105,13 @@ app.post("/admin/reset-votes", async (req, res) => {
   });
   
 
-// Get voting results
 app.get("/results", (req, res) => {
   db.query("SELECT candidate, COUNT(*) as count FROM votes GROUP BY candidate", (err, results) => {
     res.json(results);
   });
 });
 
-// Get candidates
+
 app.get("/candidates", (req, res) => {
   db.query("SELECT name FROM candidates", (err, results) => {
     res.json(results.map((row) => row.name));
@@ -126,7 +123,6 @@ app.post("/admin/login", async (req, res) => {
     const { password } = req.body;
   
     try {
-      // Verify the admin password using the helper function
       await verifyAdminPassword(password);
       await emitVoteProgress();
       res.json({ success: true, message: "Login successful" });
@@ -137,15 +133,12 @@ app.post("/admin/login", async (req, res) => {
   
   
 
-// Add candidate
 app.post("/admin/add-candidate", async (req, res) => {
     const { name, password } = req.body;
   
     try {
-      // Verify the admin password using the helper function
       await verifyAdminPassword(password);
   
-      // Proceed with the rest of the logic
       db.query("INSERT INTO candidates (name) VALUES (?)", [name], (err) => {
         if (err) return res.status(500).json({ message: "Candidate already exists" });
         res.json({ message: "Candidate added" });
@@ -160,10 +153,8 @@ app.post("/admin/add-candidate", async (req, res) => {
     const { name, password } = req.body;
   
     try {
-      // Verify the admin password using the helper function
       await verifyAdminPassword(password);
   
-      // Proceed with the rest of the logic
       db.query("DELETE FROM candidates WHERE name = ?", [name], (err) => {
         if (err) return res.status(500).json({ message: "Error removing candidate" });
         res.json({ message: "Candidate removed" });
@@ -174,7 +165,6 @@ app.post("/admin/add-candidate", async (req, res) => {
   });
   
 
-// Admin results
 app.get("/admin/results", async (req, res) => {
   try {
     const [results] = await dbPromise.query("SELECT candidate, COUNT(*) as votes FROM votes GROUP BY candidate");
@@ -185,10 +175,8 @@ app.get("/admin/results", async (req, res) => {
 });
 
 
-// Helper function to verify admin password
 const verifyAdminPassword = async (password) => {
     try {
-      // Fetch the stored hashed password from the database
       const [results] = await dbPromise.query("SELECT * FROM admin WHERE id = 1");
   
       if (results.length === 0) {
@@ -197,17 +185,16 @@ const verifyAdminPassword = async (password) => {
   
       const admin = results[0];
   
-      // Compare the password with the stored hash
       const match = await bcrypt.compare(password, admin.password);
       if (!match) {
         throw new Error("Invalid credentials");
       }
   
-      return true; // Password matches
+      return true; 
     } catch (error) {
       throw new Error(error.message);
     }
   };
   
-// Start server with socket.io
+
 server.listen(3000, () => console.log("Server running on port 3000"));
