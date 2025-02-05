@@ -1,17 +1,17 @@
-import express, { json } from "express";
-import { createPool } from "mysql2";
-import cors from "cors";
-import { createServer } from "http";
-import socketIo from "socket.io";
-import { compare } from "bcrypt";
+const express = require("express");
+const mysql = require("mysql2");
+const cors = require("cors");
+const http = require("http");
+const socketIo = require("socket.io");
+const bcrypt = require("bcrypt");
 
 const app = express();
-app.use(json());
+app.use(express.json());
 app.use(cors());
 
 require("dotenv").config();
 
-const db = createPool({
+const db = mysql.createPool({
   host: process.env.MYSQL_HOST,
   user: process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
@@ -40,7 +40,7 @@ db.query(`
 
 // Create HTTP server and socket.io
 
-const server = createServer(app);
+const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: "http://localhost:3001", // Specify the frontend origin
@@ -198,7 +198,7 @@ const verifyAdminPassword = async (password) => {
       const admin = results[0];
   
       // Compare the password with the stored hash
-      const match = await compare(password, admin.password);
+      const match = await bcrypt.compare(password, admin.password);
       if (!match) {
         throw new Error("Invalid credentials");
       }
