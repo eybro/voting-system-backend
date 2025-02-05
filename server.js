@@ -43,7 +43,7 @@ db.query(`
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3001", // Specify the frontend origin
+    origin: "http://localhost:3000", // Specify the frontend origin
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
